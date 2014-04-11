@@ -1,0 +1,147 @@
+cmake_minimum_required (VERSION 2.8)
+project (CCMpred)
+set(CCMPRED_MAJOR_VERSION 0)
+set(CCMPRED_MINOR_VERSION 1)
+set(CCMPRED_PATCH_VERSION 0)
+
+set(CCMPRED_VERSION ${CCMPRED_MAJOR_VERSION}.${CCMPRED_MINOR_VERSION}.${CCMPRED_PATCH_VERSION})
+
+
+
+set(CMAKE_C_FLAGS "-std=c99 -march=native -O3 -fno-strict-aliasing -g")
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
+include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_SOURCE_DIR}/lib/libconjugrad/include")
+
+# OpenMP is on by default. You can disable compiling with OpenMP by using cmake -DWITH_OMP=OFF
+if(NOT DEFINED WITH_OMP)
+	set(WITH_OMP ON)
+endif(NOT DEFINED WITH_OMP)
+
+# CUDA is on by default. You can disable compiling with cuda by using cmake -DWITH_CUDA=OFF
+if(NOT DEFINED WITH_CUDA)
+	set(WITH_CUDA ON)
+endif(NOT DEFINED WITH_CUDA)
+
+# curses is on by default. You can disable compiling with curses by using cmake -DWITH_CURSES=OFF
+if(NOT DEFINED WITH_CURSES)
+	set(WITH_CURSES ON)
+endif(NOT DEFINED WITH_CURSES)
+
+# generate padded code by default. You can disable padding by using cmake -DWITH_PADDING=OFF
+if(NOT DEFINED WITH_PADDING)
+	set(WITH_PADDING ON)
+endif(NOT DEFINED WITH_PADDING)
+
+if(NOT DEFINED CONJUGRAD_FLOAT)
+	set(CONJUGRAD_FLOAT 32)
+endif(NOT DEFINED CONJUGRAD_FLOAT)
+
+add_definitions("-DCONJUGRAD_FLOAT=${CONJUGRAD_FLOAT}")
+add_definitions("-D__VERSION=\"${CCMPRED_VERSION}\"")
+add_definitions("-DBIG_ALIGN=0")
+
+set(SOURCES src/ccmpred.c src/sequence.c src/util.c src/io.c src/evaluate_cpu.c src/parseopt.c src/reweighting.c src/numdif.c)
+
+
+# Compile with padding if set
+if(WITH_PADDING)
+	add_definitions(-DPADDING)
+endif(WITH_PADDING)
+
+# Compile with OpenMP if available
+if(WITH_OMP)
+	find_package(OpenMP)
+endif(WITH_OMP)
+if(OPENMP_FOUND)
+	list(APPEND SOURCES src/evaluate_cpu_omp.c)
+	add_definitions("-DOPENMP")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif(OPENMP_FOUND)
+
+# Compile with CUDA if we can find the SDK
+if(WITH_CUDA)
+	find_package(CUDA)
+endif(WITH_CUDA)
+if(CUDA_FOUND)
+	add_definitions(-DCUDA)
+
+	if(NOT DEFINED GPU_ARCH)
+		set(GPU_ARCH "-arch=sm_20")
+	endif(NOT DEFINED GPU_ARCH)
+
+	set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -lineinfo ${GPU_ARCH}")
+
+	set(CUDA_SEPARATE_COMPILATION ON)
+
+	cuda_compile(KERNELS_O src/evaluate_cuda_kernels.cu)
+	list(APPEND SOURCES src/evaluate_cuda.c ${KERNELS_O})
+	include_directories(${CUDA_INCLUDE_DIRS})
+endif(CUDA_FOUND)
+
+# Compile with curses if available
+if(WITH_CURSES)
+	find_package(Curses)
+endif(WITH_CURSES)
+if(CURSES_HAVE_CURSES_H AND WITH_CURSES)
+	add_definitions(-DCURSES)
+endif(CURSES_HAVE_CURSES_H AND WITH_CURSES)
+
+
+
+add_executable(ccmpred ${SOURCES})
+
+if(CURSES_HAVE_CURSES_H)
+	target_link_libraries(ccmpred ${CURSES_LIBRARIES})
+endif(CURSES_HAVE_CURSES_H)
+
+if(UNIX)
+	target_link_libraries(ccmpred m)
+endif(UNIX)
+
+
+# compile libConjuGrad
+add_subdirectory(lib/libconjugrad)
+target_link_libraries(ccmpred conjugrad)
+
+
+if(CUDA_FOUND)
+	set(CMAKE_SKIP_RPATH on) # no -rpath
+	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "") # no -rdynamic
+	set(CMAKE_C_LINK_EXECUTABLE "nvcc ${CUDA_NVCC_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> -rdc=true -Xcompiler -fopenmp")
+	set_target_properties(conjugrad PROPERTIES LINK_LIBRARIES "") # remove absolute path to libcudart.so
+endif(CUDA_FOUND)
+
+install(TARGETS ccmpred DESTINATION bin)
+
+# package creation
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Protein residue-residue contacts from correlated mutations predicted accurately and quickly")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+SET(CPACK_PACKAGE_VENDOR "AG Soeding")
+set(CPACK_PACKAGE_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION_MAJOR "${CCMPRED_MAJOR_VERSION}")
+set(CPACK_PACKAGE_VERSION_MINOR "${CCMPRED_MINOR_VERSION}")
+set(CPACK_PACKAGE_VERSION_PATCH "${CCMPRED_PATCH_VERSION}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY  "ccmpred ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "ccmpred-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+if(WIN32 AND NOT UNIX)
+	SET(CPACK_GENERATOR NSIS ZIP)
+else(WIN32 AND NOT UNIX)
+	SET(CPACK_STRIP_FILES "bin/ccmpred")
+	SET(CPACK_SOURCE_STRIP_FILES "")
+
+	SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Stefan Seemayer")
+	SET(CPACK_DEBIAN_PACKAGE_SECTION "science")
+
+	SET(CPACK_RPM_PACKAGE_LICENSE "GPLv3+")
+	SET(CPACK_RPM_PACKAGE_GROUP "Application/Engineering")
+
+	SET(CPACK_GENERATOR DEB RPM)
+	SET(CPACK_SOURCE_GENERATOR TGZ)
+
+	SET(CPACK_SOURCE_IGNORE_FILES "_CPack_Packages" ".git" ".mat" "bin" "CMakeFiles" ".zip" ".tar.gz" ".rpm" ".deb" ".swp" "CMakeCache.txt" "CPackSourceConfig.cmake" "CPackConfig.cmake" "cmake_install.cmake" "install_manifest.txt" ".pyc")
+endif(WIN32 AND NOT UNIX)
+set(CPACK_PACKAGE_EXECUTABLES "CCMpred" "CCMpred")
+include(CPack)
+
