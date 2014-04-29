@@ -97,9 +97,11 @@ void read_raw(char *filename, userdata *ud, conjugrad_float_t *x) {
 #ifdef MSGPACK
 void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol) {
 	int nsingle = ncol * (N_ALPHA - 1);
+	int nsingle_padded = nsingle + N_ALPHA_PAD - (nsingle % N_ALPHA_PAD);
 
 	conjugrad_float_t *x1 = x;
-	conjugrad_float_t *x2 = x + nsingle;
+	conjugrad_float_t *x2 = &x[nsingle_padded];
+	(void)x2;
 
 	msgpack_sbuffer* buffer = msgpack_sbuffer_new();
 	msgpack_packer* pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
