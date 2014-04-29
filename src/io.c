@@ -7,6 +7,10 @@
 #include "io.h"
 #include "conjugrad.h"
 
+#ifdef MSGPACK
+#include <msgpack.h>
+#endif
+
 void write_matrix(FILE *out, conjugrad_float_t *mat, int ncol, int nrow) {
 	for(int i = 0; i < nrow; i++) {
 		for(int j = 0; j < ncol; j++) {
@@ -90,3 +94,85 @@ void read_raw(char *filename, userdata *ud, conjugrad_float_t *x) {
 	fclose(f);
 }
 
+#ifdef MSGPACK
+void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol) {
+	int nsingle = ncol * (N_ALPHA - 1);
+
+	conjugrad_float_t *x1 = x;
+	conjugrad_float_t *x2 = x + nsingle;
+
+	msgpack_sbuffer* buffer = msgpack_sbuffer_new();
+	msgpack_packer* pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
+
+	msgpack_pack_map(pk, 4);
+
+	msgpack_pack_raw(pk, 6);
+	msgpack_pack_raw_body(pk, "format", 6);
+	msgpack_pack_raw(pk, 5);
+	msgpack_pack_raw_body(pk, "ccm-1", 5);
+
+	msgpack_pack_raw(pk, 4);
+	msgpack_pack_raw_body(pk, "ncol", 4);
+	msgpack_pack_int32(pk, ncol);
+
+	msgpack_pack_raw(pk, 8);
+	msgpack_pack_raw_body(pk, "x_single", 8);
+	msgpack_pack_array(pk, ncol * (N_ALPHA - 1));
+	for(int i = 0; i < ncol; i++) {
+		for(int a = 0; a < N_ALPHA - 1; a++) {
+			#if CONJUGRAD_FLOAT == 32
+				msgpack_pack_float(pk, V(i, a));
+			#elif CONJUGRAD_FLOAT == 64
+				msgpack_pack_double(pk, V(i, a));
+			#endif
+		}
+	}
+
+	msgpack_pack_raw(pk, 6);
+	msgpack_pack_raw_body(pk, "x_pair", 6);
+	
+	int nedge = ncol * (ncol - 1) / 2;
+	msgpack_pack_map(pk, nedge);
+
+	char sbuf[8192];
+	for(int i = 0; i < ncol; i++) {
+		for(int j = i + 1; j < ncol; j++) {
+
+			int nchar = snprintf(sbuf, 8192, "%d/%d", i, j);
+
+			msgpack_pack_raw(pk, nchar);
+			msgpack_pack_raw_body(pk, sbuf, nchar);
+
+			msgpack_pack_map(pk, 3);
+			
+			msgpack_pack_raw(pk, 1);
+			msgpack_pack_raw_body(pk, "i", 1);
+			msgpack_pack_int32(pk, i);
+
+			msgpack_pack_raw(pk, 1);
+			msgpack_pack_raw_body(pk, "j", 1);
+			msgpack_pack_int32(pk, j);
+
+			msgpack_pack_raw(pk, 1);
+			msgpack_pack_raw_body(pk, "x", 1);
+
+			msgpack_pack_array(pk, N_ALPHA * N_ALPHA);
+			for(int a = 0; a < N_ALPHA; a++) {
+				for(int b = 0; b < N_ALPHA; b++) {
+					#if CONJUGRAD_FLOAT == 32
+						msgpack_pack_float(pk, W(b, j, a, i));
+					#elif CONJUGRAD_FLOAT == 64
+						msgpack_pack_double(pk, W(b, j, a, i));
+					#endif
+				}
+			}
+		}
+	}
+
+
+	fwrite(buffer->data, buffer->size, 1, out);
+
+	msgpack_sbuffer_free(buffer);
+	msgpack_packer_free(pk);
+}
+#endif

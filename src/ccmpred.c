@@ -172,6 +172,10 @@ void usage(char* exename, int long_usage) {
 #endif
 		printf("\t-n NUMITER\tCompute a maximum of NUMITER operations [default: 50]\n");
 		printf("\t-r RAWFILE\tStore raw prediction matrix in RAWFILE\n");
+
+#ifdef MSGPACK
+		printf("\t-b BRAWFLE\tStore raw prediction matrix in msgpack format in BRAWFLE\n");
+#endif
 		printf("\t-i INIFILE\tRead initial weights from INIFILE\n");
 		printf("\t-w IDTHRES\tSet sequence reweighting identity threshold to IDTHRES [default: 0.8]\n");
 		printf("\t-l LFACTOR\tSet pairwise regularization coefficients to LFACTOR * (L-1) [default: 0.2]\n");
@@ -216,6 +220,13 @@ int main(int argc, char **argv)
 	free(old_optstr);
 #endif
 
+#ifdef MSGPACK
+	char* msgpackfilename = NULL;
+	old_optstr = optstr;
+	optstr = concat("b:", optstr);
+	free(old_optstr);
+#endif
+
 	optList = parseopt(argc, argv, optstr);
 	free(optstr);
 
@@ -242,6 +253,11 @@ int main(int argc, char **argv)
 #ifdef CUDA
 			case 'd':
 				use_def_gpu = atoi(thisOpt->argument);
+				break;
+#endif
+#ifdef MSGPACK
+			case 'b':
+				msgpackfilename = thisOpt->argument;
 				break;
 #endif
 			case 'r':
@@ -518,6 +534,21 @@ int main(int argc, char **argv)
 
 		fclose(rawfile);
 	}
+
+#ifdef MSGPACK
+	if(msgpackfilename != NULL) {
+		printf("Writing msgpack raw output to %s\n", msgpackfilename);
+		FILE* rawfile = fopen(msgpackfilename, "w");
+
+		if(rawfile == NULL) {
+			printf("Cannot open %s for writing!\n\n", msgpackfilename);
+			return 4;
+		}
+
+		write_raw_msgpack(rawfile, x, ncol);
+		fclose(rawfile);
+	}
+#endif
 
 	sum_submatrices(x, outmat, ncol);
 
