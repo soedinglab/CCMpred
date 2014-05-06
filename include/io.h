@@ -29,3 +29,6 @@ void write_raw(FILE *out, conjugrad_float_t *x, int ncol);
  */
 void read_raw(char *filename, userdata *ud, conjugrad_float_t *x);
 
+#ifdef MSGPACK
+void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol);
+#endif
