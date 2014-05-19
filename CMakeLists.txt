@@ -7,6 +7,7 @@ set(CCMPRED_PATCH_VERSION 0)
 set(CCMPRED_VERSION ${CCMPRED_MAJOR_VERSION}.${CCMPRED_MINOR_VERSION}.${CCMPRED_PATCH_VERSION})
 
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_lib/")
 
 set(CMAKE_C_FLAGS "-std=c99 -march=native -O3 -fno-strict-aliasing -g")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -33,6 +34,11 @@ if(NOT DEFINED WITH_PADDING)
 	set(WITH_PADDING ON)
 endif(NOT DEFINED WITH_PADDING)
 
+# enable msgpack support by default. You can disable it by using cmake -DWITH_MSGPACK=OFF
+if(NOT DEFINED WITH_MSGPACK)
+	set(WITH_MSGPACK ON)
+endif(NOT DEFINED WITH_MSGPACK)
+
 if(NOT DEFINED CONJUGRAD_FLOAT)
 	set(CONJUGRAD_FLOAT 32)
 endif(NOT DEFINED CONJUGRAD_FLOAT)
@@ -48,6 +54,15 @@ set(SOURCES src/ccmpred.c src/sequence.c src/util.c src/io.c src/evaluate_cpu.c 
 if(WITH_PADDING)
 	add_definitions(-DPADDING)
 endif(WITH_PADDING)
+
+
+# Compile with msgpack if available
+if(WITH_MSGPACK)
+	find_package(MsgPack)
+endif(WITH_MSGPACK)
+if(MSGPACK_FOUND)
+	add_definitions("-DMSGPACK")
+endif(MSGPACK_FOUND)
 
 # Compile with OpenMP if available
 if(WITH_OMP)
