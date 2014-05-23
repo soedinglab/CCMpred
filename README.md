@@ -38,7 +38,7 @@ We recommend compiling CCMpred on the machine that should run the computations s
 
 ### Downloading
 #### Release tarballs
-The release tarballs should contain all required source files. Simply download and extract
+The [release tarballs](https://bitbucket.org/soedinglab/ccmpred/downloads) should contain all required source files. Simply download and extract
 
 #### Cloning from GIT
 If you want to compile the most recent version, simply clone the git repository. Then, from the repository root, initialize the libconjugrad submodule:
