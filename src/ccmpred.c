@@ -350,12 +350,20 @@ int main(int argc, char **argv)
 	}
 
 	if (use_def_gpu != -1) {
-		cudaSetDevice(use_def_gpu);
+		cudaError_t err = cudaSetDevice(use_def_gpu);
+		if(cudaSuccess != err) {
+			printf("Error setting device: %d\n", err);
+			exit(1);
+		}
 		cudaGetDeviceProperties(&prop, use_def_gpu);
 		printf("using device #%d: %s\n", use_def_gpu, prop.name);
 
 		size_t mem_free, mem_total;
-		cudaMemGetInfo(&mem_free, &mem_total);
+		err = cudaMemGetInfo(&mem_free, &mem_total);
+		if(cudaSuccess != err) {
+			printf("Error getting memory info: %d\n", err);
+			exit(1);
+		}
 
 		size_t mem_needed = nrow * ncol * 2 + // MSAs
 		                    sizeof(conjugrad_float_t) * nrow * ncol * 2 + // PC, PCS
@@ -364,9 +372,9 @@ int main(int argc, char **argv)
 		                    (sizeof(conjugrad_float_t) * ((N_ALPHA - 1) * ncol + ncol * ncol * N_ALPHA * N_ALPHA_PAD)) * 4;
 
 		setlocale(LC_NUMERIC, "");
-		printf("Total GPU RAM:  %'15u\n", mem_total);
-		printf("Free GPU RAM:   %'15u\n", mem_free);
-		printf("Needed GPU RAM: %'15u ", mem_needed);
+		printf("Total GPU RAM:  %'17lu\n", mem_total);
+		printf("Free GPU RAM:   %'17lu\n", mem_free);
+		printf("Needed GPU RAM: %'17lu ", mem_needed);
 
 		if(mem_needed <= mem_free) {
 			printf("✓\n");
