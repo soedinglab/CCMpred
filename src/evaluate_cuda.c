@@ -102,21 +102,36 @@ int init_cuda( void *instance ) {
 
 	CHECK_ERR(cudaMalloc((void **) &d_weights, sizeof(conjugrad_float_t) * nrow));
 
-	CHECK_ERR(cudaMemset(d_weights, 0, sizeof(conjugrad_float_t) * nrow));
-	gpu_compute_weights_simple(d_weights, ud->reweighting_threshold, d_msa, nrow, ncol);
+	if(ud->reweighting_threshold < 1) {
 
-	conjugrad_float_t *tmp_weights = (conjugrad_float_t *)malloc(sizeof(conjugrad_float_t) * nrow);
-	CHECK_ERR(cudaMemcpy(tmp_weights, d_weights, sizeof(conjugrad_float_t) * nrow, cudaMemcpyDeviceToHost));
-	conjugrad_float_t wsum = 0.0;
-	conjugrad_float_t wmin = tmp_weights[0], wmax = tmp_weights[0];
-	for (int i = 0; i < nrow; i++) {
-		conjugrad_float_t wt = tmp_weights[i];
-		wsum += wt;
-		if(wt > wmax) { wmax = wt; }
-		if(wt < wmin) { wmin = wt; }
+		CHECK_ERR(cudaMemset(d_weights, 0, sizeof(conjugrad_float_t) * nrow));
+		gpu_compute_weights_simple(d_weights, ud->reweighting_threshold, d_msa, nrow, ncol);
+
+		conjugrad_float_t *tmp_weights = (conjugrad_float_t *)malloc(sizeof(conjugrad_float_t) * nrow);
+		CHECK_ERR(cudaMemcpy(tmp_weights, d_weights, sizeof(conjugrad_float_t) * nrow, cudaMemcpyDeviceToHost));
+		conjugrad_float_t wsum = 0.0;
+		conjugrad_float_t wmin = tmp_weights[0], wmax = tmp_weights[0];
+		for (int i = 0; i < nrow; i++) {
+			conjugrad_float_t wt = tmp_weights[i];
+			wsum += wt;
+			if(wt > wmax) { wmax = wt; }
+			if(wt < wmin) { wmin = wt; }
+		}
+		printf("Reweighted %d sequences with threshold %.1f to Beff=%g weight mean=%g, min=%g, max=%g\n", nrow, ud->reweighting_threshold, wsum, wsum / nrow, wmin, wmax);
+		free(tmp_weights);
+
+	} else {
+
+
+		conjugrad_float_t *tmp_weights = (conjugrad_float_t *)malloc(sizeof(conjugrad_float_t) * nrow);
+		for(int i = 0; i < nrow; i++) {
+			tmp_weights[i] = F1;
+		}
+		CHECK_ERR(cudaMemcpy(d_weights, tmp_weights, sizeof(conjugrad_float_t) * nrow, cudaMemcpyHostToDevice));
+		free(tmp_weights);
+		printf("Using uniform weights\n");	
+
 	}
-	printf("Reweighted %d sequences with threshold %.1f to Beff=%g weight mean=%g, min=%g, max=%g\n", nrow, ud->reweighting_threshold, wsum, wsum / nrow, wmin, wmax);
-	free(tmp_weights);
 
 	gpu_initialize_histograms_weighted(d_msa, d_histograms, (const conjugrad_float_t *)d_weights, ncol, nrow);
 

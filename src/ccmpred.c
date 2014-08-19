@@ -172,6 +172,10 @@ void usage(char* exename, int long_usage) {
 #endif
 		printf("\t-n NUMITER\tCompute a maximum of NUMITER operations [default: 50]\n");
 		printf("\t-r RAWFILE\tStore raw prediction matrix in RAWFILE\n");
+
+#ifdef MSGPACK
+		printf("\t-b BRAWFLE\tStore raw prediction matrix in msgpack format in BRAWFLE\n");
+#endif
 		printf("\t-i INIFILE\tRead initial weights from INIFILE\n");
 		printf("\t-w IDTHRES\tSet sequence reweighting identity threshold to IDTHRES [default: 0.8]\n");
 		printf("\t-l LFACTOR\tSet pairwise regularization coefficients to LFACTOR * (L-1) [default: 0.2]\n");
@@ -216,6 +220,13 @@ int main(int argc, char **argv)
 	free(old_optstr);
 #endif
 
+#ifdef MSGPACK
+	char* msgpackfilename = NULL;
+	old_optstr = optstr;
+	optstr = concat("b:", optstr);
+	free(old_optstr);
+#endif
+
 	optList = parseopt(argc, argv, optstr);
 	free(optstr);
 
@@ -242,6 +253,11 @@ int main(int argc, char **argv)
 #ifdef CUDA
 			case 'd':
 				use_def_gpu = atoi(thisOpt->argument);
+				break;
+#endif
+#ifdef MSGPACK
+			case 'b':
+				msgpackfilename = thisOpt->argument;
 				break;
 #endif
 			case 'r':
@@ -334,12 +350,20 @@ int main(int argc, char **argv)
 	}
 
 	if (use_def_gpu != -1) {
-		cudaSetDevice(use_def_gpu);
+		cudaError_t err = cudaSetDevice(use_def_gpu);
+		if(cudaSuccess != err) {
+			printf("Error setting device: %d\n", err);
+			exit(1);
+		}
 		cudaGetDeviceProperties(&prop, use_def_gpu);
 		printf("using device #%d: %s\n", use_def_gpu, prop.name);
 
 		size_t mem_free, mem_total;
-		cudaMemGetInfo(&mem_free, &mem_total);
+		err = cudaMemGetInfo(&mem_free, &mem_total);
+		if(cudaSuccess != err) {
+			printf("Error getting memory info: %d\n", err);
+			exit(1);
+		}
 
 		size_t mem_needed = nrow * ncol * 2 + // MSAs
 		                    sizeof(conjugrad_float_t) * nrow * ncol * 2 + // PC, PCS
@@ -348,9 +372,9 @@ int main(int argc, char **argv)
 		                    (sizeof(conjugrad_float_t) * ((N_ALPHA - 1) * ncol + ncol * ncol * N_ALPHA * N_ALPHA_PAD)) * 4;
 
 		setlocale(LC_NUMERIC, "");
-		printf("Total GPU RAM:  %'15u\n", mem_total);
-		printf("Free GPU RAM:   %'15u\n", mem_free);
-		printf("Needed GPU RAM: %'15u ", mem_needed);
+		printf("Total GPU RAM:  %'17lu\n", mem_total);
+		printf("Free GPU RAM:   %'17lu\n", mem_free);
+		printf("Needed GPU RAM: %'17lu ", mem_needed);
 
 		if(mem_needed <= mem_free) {
 			printf("✓\n");
@@ -518,6 +542,21 @@ int main(int argc, char **argv)
 
 		fclose(rawfile);
 	}
+
+#ifdef MSGPACK
+	if(msgpackfilename != NULL) {
+		printf("Writing msgpack raw output to %s\n", msgpackfilename);
+		FILE* rawfile = fopen(msgpackfilename, "w");
+
+		if(rawfile == NULL) {
+			printf("Cannot open %s for writing!\n\n", msgpackfilename);
+			return 4;
+		}
+
+		write_raw_msgpack(rawfile, x, ncol);
+		fclose(rawfile);
+	}
+#endif
 
 	sum_submatrices(x, outmat, ncol);
 
