@@ -54,6 +54,13 @@ With the sourcecode ready, simply run cmake with the default settings and librar
 
 You should find the compiled version of CCMpred at `bin/ccmpred`. To check if the CUDA libraries were detected, you can run `ldd bin/ccmpred` to see if CUDA was linked with the program, or simply run a prediction and check the program's output.
 
+## Useful scripts
+
+The `scripts/` subdirectory contains some python scripts you might find useful - please make sure both NumPy and BioPython are installed to use them!
+
+  * `convert_alignment.py` - Use BioPython's `Bio.SeqIO` to convert a variety of alignment formats (FASTA, etc.) into the CCMpred alignment input format
+  * `top_couplings.py` - Extract the top couplings from an output contact maps in a list representation
+
 ## License
 CCMpred is released under the GNU Affero General Public License v3 or later. See LICENSE for more details.
 
