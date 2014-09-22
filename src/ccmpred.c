@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <limits.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <string.h>
 #include <locale.h>
 #include <math.h>
@@ -11,6 +13,7 @@
 #include "conjugrad.h"
 #include "util.h"
 #include "parseopt.h"
+#include "meta.h"
 
 #ifdef CUDA
 #include <cuda.h>
@@ -57,6 +60,23 @@ static int progress(
 ) {
 	//printf("iter\teval\tf(x)    \t║x║     \t║g║     \tstep\n");
 	printf("%-4d\t%-4d\t%-8g\t%-8g\t%-8.8g\t%-3.3g\n", k, ls, fx, xnorm, gnorm, step);
+
+#ifdef JANSSON
+	userdata *ud = (userdata *)instance;
+	json_t *meta_steps = (json_t *)ud->meta_steps;
+
+	json_t *ms = json_object();
+	json_object_set(ms, "iteration", json_integer(k));
+	json_object_set(ms, "eval", json_integer(ls));
+	json_object_set(ms, "fx", json_real(fx));
+	json_object_set(ms, "xnorm", json_real(xnorm));
+	json_object_set(ms, "gnorm", json_real(gnorm));
+	json_object_set(ms, "step", json_real(step));
+
+	json_array_append(meta_steps, ms);
+
+#endif
+
 	return 0;
 }
 
@@ -313,6 +333,35 @@ int main(int argc, char **argv)
 		return 2;
 	}
 
+#ifdef JANSSON
+	char* metafilename = malloc(2048);
+	snprintf(metafilename, 2048, "%s.meta.json", msafilename);
+	
+	FILE *metafile = fopen(metafilename, "r");
+	json_t *meta;
+	if(metafile == NULL) {
+		// Cannot find .meta.json file - create new empty metadata
+		meta = meta_create();
+	} else {
+		// Load metadata from matfile.meta.json
+		meta = meta_read_json(metafile);
+		fclose(metafile);
+	}
+
+	json_t *meta_step = meta_add_step(meta, "ccmpred");
+	json_object_set(meta_step, "version", json_string(__VERSION));
+
+	json_t *meta_parameters = json_object();
+	json_object_set(meta_step, "parameters", meta_parameters);
+
+	json_t *meta_steps = json_array();
+	json_object_set(meta_step, "iterations", meta_steps);
+
+	json_t *meta_results = json_object();
+	json_object_set(meta_step, "results", meta_results);
+
+#endif
+
 	int ncol, nrow;
 	unsigned char* msa = read_msa(msafile, &ncol, &nrow);
 	fclose(msafile);
@@ -382,20 +431,43 @@ int main(int argc, char **argv)
 			printf("⚠\n");
 		}
 
+#ifdef JANSSON
+		json_object_set(meta_parameters, "device", json_string("gpu"));
+		json_t* meta_gpu = json_object();
+		json_object_set(meta_parameters, "gpu_info", meta_gpu);
+
+		json_object_set(meta_gpu, "name", json_string(prop.name));
+		json_object_set(meta_gpu, "mem_total", json_integer(mem_total));
+		json_object_set(meta_gpu, "mem_free", json_integer(mem_free));
+		json_object_set(meta_gpu, "mem_needed", json_integer(mem_needed));
+#endif
+
 
 	} else {
 		printf("using CPU");
+#ifdef JANSSON
+		json_object_set(meta_parameters, "device", json_string("cpu"));
+#endif
 
 #ifdef OPENMP
 		printf(" (%d thread(s))", numthreads);
+#ifdef JANSSON
+		json_object_set(meta_parameters, "cpu_threads", json_integer(numthreads));
+#endif
 #endif
 		printf("\n");
 
 	}
 #else // CUDA
 	printf("using CPU");
+#ifdef JANSSON
+	json_object_set(meta_parameters, "device", json_string("cpu"));
+#endif
 #ifdef OPENMP
 	printf(" (%d thread(s))\n", numthreads);
+#ifdef JANSSON
+	json_object_set(meta_parameters, "cpu_threads", json_integer(numthreads));
+#endif
 #endif // OPENMP
 	printf("\n");
 #endif // CUDA
@@ -465,6 +537,56 @@ int main(int argc, char **argv)
 
 	init(ud);
 
+#ifdef JANSSON
+
+
+	json_object_set(meta_parameters, "reweighting_threshold", json_real(ud->reweighting_threshold));
+	json_object_set(meta_parameters, "apc", json_boolean(use_apc));
+	json_object_set(meta_parameters, "normalization", json_boolean(use_normalization));
+
+	json_t *meta_regularization = json_object();
+	json_object_set(meta_parameters, "regularization", meta_regularization);
+
+	json_object_set(meta_regularization, "type", json_string("l2")); 
+	json_object_set(meta_regularization, "lambda_single", json_real(lambda_single));
+	json_object_set(meta_regularization, "lambda_pair", json_real(lambda_pair));
+	json_object_set(meta_regularization, "lambda_pair_factor", json_real(lambda_pair_factor));
+
+	json_t *meta_opt = json_object();
+	json_object_set(meta_parameters, "optimization", meta_opt);
+
+	json_object_set(meta_opt, "method", json_string("libconjugrad"));
+	json_object_set(meta_opt, "float_bits", json_integer((int)sizeof(conjugrad_float_t) * 8));
+	json_object_set(meta_opt, "max_iterations", json_integer(param->max_iterations));
+	json_object_set(meta_opt, "max_linesearch", json_integer(param->max_linesearch));
+	json_object_set(meta_opt, "alpha_mul", json_real(param->alpha_mul));
+	json_object_set(meta_opt, "ftol", json_real(param->ftol));
+	json_object_set(meta_opt, "wolfe", json_real(param->wolfe));
+
+
+	json_t *meta_msafile = meta_file_from_path(msafilename);
+	json_object_set(meta_parameters, "msafile", meta_msafile);
+	json_object_set(meta_msafile, "ncol", json_integer(ncol));
+	json_object_set(meta_msafile, "nrow", json_integer(nrow));
+
+	if(initfilename != NULL) {
+		json_t *meta_initfile = meta_file_from_path(initfilename);
+		json_object_set(meta_parameters, "initfile", meta_initfile);
+		json_object_set(meta_initfile, "ncol", json_integer(ncol));
+		json_object_set(meta_initfile, "nrow", json_integer(nrow));
+	}
+
+	double neff = 0;
+	for(int i = 0; i < nrow; i++) {
+		neff += ud->weights[i];
+	}
+
+	json_object_set(meta_msafile, "neff", json_real(neff));
+
+	ud->meta_steps = meta_steps;
+
+#endif
+
 	printf("\nWill optimize %d %ld-bit variables\n\n", nvar, sizeof(conjugrad_float_t) * 8);
 
 	if(color) { printf("\x1b[1m"); }
@@ -505,7 +627,6 @@ int main(int argc, char **argv)
 	ret = conjugrad(nvar_padded, x, &fx, evaluate, progress, ud, param);
 #endif
 
-
 	printf("\n");
 	printf("%s with status code %d - ", (ret < 0 ? "Exit" : "Done"), ret);
 
@@ -529,9 +650,10 @@ int main(int argc, char **argv)
 
 	conjugrad_float_t outmat[ncol * ncol];
 
+	FILE *rawfile = NULL;
 	if(rawfilename != NULL) {
 		printf("Writing raw output to %s\n", rawfilename);
-		FILE* rawfile = fopen(rawfilename, "w");
+		rawfile = fopen(rawfilename, "w");
 
 		if(rawfile == NULL) {
 			printf("Cannot open %s for writing!\n\n", rawfilename);
@@ -539,22 +661,24 @@ int main(int argc, char **argv)
 		}
 
 		write_raw(rawfile, x, ncol);
-
-		fclose(rawfile);
 	}
 
 #ifdef MSGPACK
+
+	FILE *msgpackfile;
 	if(msgpackfilename != NULL) {
 		printf("Writing msgpack raw output to %s\n", msgpackfilename);
-		FILE* rawfile = fopen(msgpackfilename, "w");
+		msgpackfile = fopen(msgpackfilename, "w");
 
-		if(rawfile == NULL) {
+		if(msgpackfile == NULL) {
 			printf("Cannot open %s for writing!\n\n", msgpackfilename);
 			return 4;
 		}
 
-		write_raw_msgpack(rawfile, x, ncol);
-		fclose(rawfile);
+#ifndef JANSSON
+		void *meta = NULL;
+#endif
+
 	}
 #endif
 
@@ -569,6 +693,42 @@ int main(int argc, char **argv)
 	}
 
 	write_matrix(out, outmat, ncol, ncol);
+
+#ifdef JANSSON
+
+	json_object_set(meta_results, "fx_final", json_real(fx));
+	json_object_set(meta_results, "num_iterations", json_integer(json_array_size(meta_steps)));
+	json_object_set(meta_results, "opt_code", json_integer(ret));
+
+	json_t *meta_matfile = meta_file_from_path(matfilename);
+	json_object_set(meta_results, "matfile", meta_matfile);
+
+	if(rawfilename != NULL) {
+		json_object_set(meta_results, "rawfile", meta_file_from_path(rawfilename));
+	}
+
+	if(msgpackfilename != NULL) {
+		json_object_set(meta_results, "msgpackfile", meta_file_from_path(msgpackfilename));
+	}
+
+	fprintf(out, "#>META> %s", json_dumps(meta, JSON_COMPACT));
+	if(rawfile != NULL) {
+		fprintf(rawfile, "#>META> %s", json_dumps(meta, JSON_COMPACT));
+	}
+#endif
+
+
+	if(rawfile != NULL) {
+		fclose(rawfile);
+	}
+
+#ifdef MSGPACK
+	if(msgpackfile != NULL) {
+		write_raw_msgpack(msgpackfile, x, ncol, meta);
+		fclose(msgpackfile);
+	}
+
+#endif
 
 	fflush(out);
 	fclose(out);
