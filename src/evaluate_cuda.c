@@ -128,6 +128,7 @@ int init_cuda( void *instance ) {
 			tmp_weights[i] = F1;
 		}
 		CHECK_ERR(cudaMemcpy(d_weights, tmp_weights, sizeof(conjugrad_float_t) * nrow, cudaMemcpyHostToDevice));
+		free(tmp_weights);
 		printf("Using uniform weights\n");	
 
 	}
