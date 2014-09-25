@@ -348,6 +348,8 @@ int main(int argc, char **argv)
 		fclose(metafile);
 	}
 
+	json_object_set(meta, "method", json_string("ccmpred"));
+
 	json_t *meta_step = meta_add_step(meta, "ccmpred");
 	json_object_set(meta_step, "version", json_string(__VERSION));
 
