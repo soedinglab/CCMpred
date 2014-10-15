@@ -191,19 +191,21 @@ void usage(char* exename, int long_usage) {
 int main(int argc, char **argv)
 {
 	char *rawfilename = NULL;
-	int numiter = 50;
+	int numiter = 250;
 	int use_apc = 1;
 	int use_normalization = 0;
 	conjugrad_float_t lambda_single = F001; // 0.01
 	conjugrad_float_t lambda_pair = FInf;
 	conjugrad_float_t lambda_pair_factor = F02; // 0.2
+	int conjugrad_k = 5;
+	conjugrad_float_t conjugrad_eps = 0.01;
 
 	parse_option *optList, *thisOpt;
 
 	char *optstr;
 	char *old_optstr = malloc(1);
 	old_optstr[0] = 0;
-	optstr = concat("r:i:n:w:l:ARh?", old_optstr);
+	optstr = concat("r:i:n:w:k:e:l:ARh?", old_optstr);
 	free(old_optstr);
 
 #ifdef OPENMP
@@ -274,6 +276,12 @@ int main(int argc, char **argv)
 				break;
 			case 'l':
 				lambda_pair_factor = (conjugrad_float_t)atof(thisOpt->argument);
+				break;
+			case 'k':
+				conjugrad_k = (int)atoi(thisOpt->argument);
+				break;
+			case 'e':
+				conjugrad_eps = (conjugrad_float_t)atof(thisOpt->argument);
 				break;
 			case 'A':
 				use_apc = 0;
@@ -436,6 +444,8 @@ int main(int argc, char **argv)
 	conjugrad_parameter_t *param = conjugrad_init();
 
 	param->max_iterations = numiter;
+	param->epsilon = conjugrad_eps;
+	param->k = conjugrad_k;
 	param->max_linesearch = 5;
 	param->alpha_mul = F05;
 	param->ftol = 1e-4;
