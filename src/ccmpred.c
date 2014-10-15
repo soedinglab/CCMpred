@@ -667,7 +667,7 @@ int main(int argc, char **argv)
 
 #ifdef MSGPACK
 
-	FILE *msgpackfile;
+	FILE *msgpackfile = NULL;
 	if(msgpackfilename != NULL) {
 		printf("Writing msgpack raw output to %s\n", msgpackfilename);
 		msgpackfile = fopen(msgpackfilename, "w");
