@@ -84,5 +84,10 @@ typedef struct userdata {
 	 */
 	conjugrad_float_t reweighting_threshold;
 
+
+	/**
+	 * Pointer to metadata step array
+	 */
+	void *meta_steps;
 } userdata;
 

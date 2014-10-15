@@ -9,6 +9,12 @@
 
 #ifdef MSGPACK
 #include <msgpack.h>
+
+#ifdef JANSSON
+#include <jansson.h>
+#include "meta.h"
+#endif
+
 #endif
 
 void write_matrix(FILE *out, conjugrad_float_t *mat, int ncol, int nrow) {
@@ -95,7 +101,7 @@ void read_raw(char *filename, userdata *ud, conjugrad_float_t *x) {
 }
 
 #ifdef MSGPACK
-void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol) {
+void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol, void *meta) {
 	int nsingle = ncol * (N_ALPHA - 1);
 	int nsingle_padded = nsingle + N_ALPHA_PAD - (nsingle % N_ALPHA_PAD);
 
@@ -106,7 +112,12 @@ void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol) {
 	msgpack_sbuffer* buffer = msgpack_sbuffer_new();
 	msgpack_packer* pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
 
-	msgpack_pack_map(pk, 4);
+	if(meta != NULL) {
+		msgpack_pack_map(pk, 5);
+		meta_write_msgpack(pk, (json_t *)meta);
+	} else {
+		msgpack_pack_map(pk, 4);
+	}
 
 	msgpack_pack_raw(pk, 6);
 	msgpack_pack_raw_body(pk, "format", 6);
@@ -132,7 +143,7 @@ void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol) {
 
 	msgpack_pack_raw(pk, 6);
 	msgpack_pack_raw_body(pk, "x_pair", 6);
-	
+
 	int nedge = ncol * (ncol - 1) / 2;
 	msgpack_pack_map(pk, nedge);
 

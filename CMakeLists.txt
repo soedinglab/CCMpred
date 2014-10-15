@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 project (CCMpred)
 set(CCMPRED_MAJOR_VERSION 0)
-set(CCMPRED_MINOR_VERSION 1)
+set(CCMPRED_MINOR_VERSION 2)
 set(CCMPRED_PATCH_VERSION 0)
 
 set(CCMPRED_VERSION ${CCMPRED_MAJOR_VERSION}.${CCMPRED_MINOR_VERSION}.${CCMPRED_PATCH_VERSION})
@@ -39,15 +39,27 @@ if(NOT DEFINED WITH_MSGPACK)
 	set(WITH_MSGPACK ON)
 endif(NOT DEFINED WITH_MSGPACK)
 
+# enable jansson support by default. You can disable it by using cmake -DWITH_JANSSON=OFF
+if(NOT DEFINED WITH_JANSSON)
+	set(WITH_JANSSON ON)
+endif(NOT DEFINED WITH_JANSSON)
+
+# enable uuid support by default. You can disable it by using cmake -DWITH_UUID=OFF
+if(NOT DEFINED WITH_UUID)
+	set(WITH_UUID ON)
+endif(NOT DEFINED WITH_UUID)
+
 if(NOT DEFINED CONJUGRAD_FLOAT)
 	set(CONJUGRAD_FLOAT 32)
 endif(NOT DEFINED CONJUGRAD_FLOAT)
 
+add_definitions("-D_DEFAULT_SOURCE")
+add_definitions("-D_GNU_SOURCE")
 add_definitions("-DCONJUGRAD_FLOAT=${CONJUGRAD_FLOAT}")
 add_definitions("-D__VERSION=\"${CCMPRED_VERSION}\"")
 add_definitions("-DBIG_ALIGN=0")
 
-set(SOURCES src/ccmpred.c src/sequence.c src/util.c src/io.c src/evaluate_cpu.c src/parseopt.c src/reweighting.c src/numdif.c)
+set(SOURCES src/ccmpred.c src/sequence.c src/util.c src/io.c src/evaluate_cpu.c src/parseopt.c src/reweighting.c src/numdif.c src/meta.c)
 
 
 # Compile with padding if set
@@ -63,6 +75,23 @@ endif(WITH_MSGPACK)
 if(MSGPACK_FOUND)
 	add_definitions("-DMSGPACK")
 endif(MSGPACK_FOUND)
+
+# Compile with jansson if available
+if(WITH_JANSSON)
+	find_package(Jansson)
+endif(WITH_JANSSON)
+if(LIBJANSSON_FOUND)
+	add_definitions("-DJANSSON")
+endif(LIBJANSSON_FOUND)
+
+
+# Compile with uuid if available
+if(WITH_UUID)
+	find_package(UUID)
+endif(WITH_UUID)
+if(LIBUUID_FOUND)
+	add_definitions("-DUUID")
+endif(LIBUUID_FOUND)
 
 # Compile with OpenMP if available
 if(WITH_OMP)
@@ -110,6 +139,16 @@ add_executable(ccmpred ${SOURCES})
 if(CURSES_HAVE_CURSES_H)
 	target_link_libraries(ccmpred ${CURSES_LIBRARIES})
 endif(CURSES_HAVE_CURSES_H)
+
+
+if(JANSSON_LIBRARIES)
+	target_link_libraries(ccmpred ${JANSSON_LIBRARIES})
+endif(JANSSON_LIBRARIES)
+
+
+if(UUID_LIBRARIES)
+	target_link_libraries(ccmpred ${UUID_LIBRARIES})
+endif(UUID_LIBRARIES)
 
 if(UNIX)
 	target_link_libraries(ccmpred m)
