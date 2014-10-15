@@ -112,12 +112,16 @@ void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol, void *meta) {
 	msgpack_sbuffer* buffer = msgpack_sbuffer_new();
 	msgpack_packer* pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
 
+#ifdef JANSSON
 	if(meta != NULL) {
 		msgpack_pack_map(pk, 5);
 		meta_write_msgpack(pk, (json_t *)meta);
 	} else {
 		msgpack_pack_map(pk, 4);
 	}
+#else
+	msgpack_pack_map(pk, 4);
+#endif
 
 	msgpack_pack_raw(pk, 6);
 	msgpack_pack_raw_body(pk, "format", 6);
