@@ -191,17 +191,24 @@ void usage(char* exename, int long_usage) {
 		printf("\t-t THREADS\tCalculate using THREADS threads on the CPU (automatically disables CUDA if available) [default: 1]\n");
 #endif
 		printf("\t-n NUMITER\tCompute a maximum of NUMITER operations [default: 50]\n");
+		printf("\t-e EPSILON\tSet convergence criterion for minimum decrease in the last K iterations to EPSILON [default: 0.01]\n");
+		printf("\t-k LASTK  \tSet K parameter for convergence criterion to LASTK [default: 5]\n");
+
+		printf("\n");
+		printf("\t-i INIFILE\tRead initial weights from INIFILE\n");
 		printf("\t-r RAWFILE\tStore raw prediction matrix in RAWFILE\n");
 
 #ifdef MSGPACK
 		printf("\t-b BRAWFLE\tStore raw prediction matrix in msgpack format in BRAWFLE\n");
 #endif
-		printf("\t-i INIFILE\tRead initial weights from INIFILE\n");
+		printf("\n");
 		printf("\t-w IDTHRES\tSet sequence reweighting identity threshold to IDTHRES [default: 0.8]\n");
 		printf("\t-l LFACTOR\tSet pairwise regularization coefficients to LFACTOR * (L-1) [default: 0.2]\n");
 		printf("\t-A        \tDisable average product correction (APC)\n");
 		printf("\t-R        \tRe-normalize output matrix to [0,1]\n");
 		printf("\t-h        \tDisplay help\n");
+
+		printf("\n");
 		printf("\n\n");
 	}
 
