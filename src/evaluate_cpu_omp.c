@@ -97,7 +97,6 @@ conjugrad_float_t evaluate_cpu_omp(
 		}
 	} // i
 
-	#pragma omp parallel for ordered reduction (+:fx)
 	for (int i = 0; i < nrow; i++) {
 		conjugrad_float_t weight = ud->weights[i];
 		for (int k = 0; k < ncol; k++) {
@@ -166,6 +165,7 @@ conjugrad_float_t evaluate_cpu_omp(
 
 	// regularization
 	conjugrad_float_t reg = F0; // 0.0
+
 	#pragma omp parallel for ordered reduction (+:reg)
 	for(int v = 0; v < nsingle; v++) {
 		reg += lambda_single * x[v] * x[v];

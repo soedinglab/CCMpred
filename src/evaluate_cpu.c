@@ -160,7 +160,6 @@ conjugrad_float_t evaluate_cpu(
 	}
 
 	fx += reg;
-	//printf("FX: %f\n", fx);
 
 	return fx;
 }

@@ -639,7 +639,7 @@ int main(int argc, char **argv)
 	} else if(ret == CONJUGRADERR_MAXIMUMITERATION) {
 		printf("Maximum number of iterations reached.\n");
 	} else {
-		printf("Unknown status code! Check the libLBFGS manual!\n");
+		printf("Unknown status code!\n");
 	}
 
 	printf("\nFinal fx = %f\n\n", fx);
