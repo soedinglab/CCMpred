@@ -56,6 +56,11 @@ unsigned char* read_msa(FILE *f, int *ncol, int *nrow) {
 
 		trim_right(buf);
 
+		if(strstr(buf, ">")) {
+			printf("ERROR: The alignment file seems to be in a3m or fasta format!\nPlease reformat the alignment to PSICOV format!\n\n");
+			exit(100);
+		}
+
 		nc = strlen(buf);
 		*ncol = nc > *ncol ? nc : *ncol;
 	}
