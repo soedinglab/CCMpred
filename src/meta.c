@@ -85,8 +85,8 @@ void json_object_to_msgpack(msgpack_packer *pk, json_t *o) {
 	const char *key;
 	json_t *value;
 	json_object_foreach(o, key, value) {
-		msgpack_pack_raw(pk, strlen(key));
-		msgpack_pack_raw_body(pk, key, strlen(key));
+		msgpack_pack_str(pk, strlen(key));
+		msgpack_pack_str_body(pk, key, strlen(key));
 
 		json_to_msgpack(pk, value);
 	}
@@ -104,8 +104,8 @@ void json_array_to_msgpack(msgpack_packer *pk, json_t *o) {
 
 void json_string_to_msgpack(msgpack_packer *pk, json_t *o) {
 	const char *val = json_string_value(o);
-	msgpack_pack_raw(pk, strlen(val));
-	msgpack_pack_raw_body(pk, val, strlen(val));
+	msgpack_pack_str(pk, strlen(val));
+	msgpack_pack_str_body(pk, val, strlen(val));
 }
 
 void json_integer_to_msgpack(msgpack_packer *pk, json_t *o) {
@@ -155,8 +155,8 @@ void json_to_msgpack(msgpack_packer *pk, json_t *o) {
 
 void meta_write_msgpack(msgpack_packer *pk, json_t *meta) {
 
-	msgpack_pack_raw(pk, 4);
-	msgpack_pack_raw_body(pk, "meta", 4);
+	msgpack_pack_str(pk, 4);
+	msgpack_pack_str_body(pk, "meta", 4);
 
 	json_to_msgpack(pk, meta);
 }

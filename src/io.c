@@ -123,17 +123,17 @@ void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol, void *meta) {
 	msgpack_pack_map(pk, 4);
 #endif
 
-	msgpack_pack_raw(pk, 6);
-	msgpack_pack_raw_body(pk, "format", 6);
-	msgpack_pack_raw(pk, 5);
-	msgpack_pack_raw_body(pk, "ccm-1", 5);
+	msgpack_pack_str(pk, 6);
+	msgpack_pack_str_body(pk, "format", 6);
+	msgpack_pack_str(pk, 5);
+	msgpack_pack_str_body(pk, "ccm-1", 5);
 
-	msgpack_pack_raw(pk, 4);
-	msgpack_pack_raw_body(pk, "ncol", 4);
+	msgpack_pack_str(pk, 4);
+	msgpack_pack_str_body(pk, "ncol", 4);
 	msgpack_pack_int32(pk, ncol);
 
-	msgpack_pack_raw(pk, 8);
-	msgpack_pack_raw_body(pk, "x_single", 8);
+	msgpack_pack_str(pk, 8);
+	msgpack_pack_str_body(pk, "x_single", 8);
 	msgpack_pack_array(pk, ncol * (N_ALPHA - 1));
 	for(int i = 0; i < ncol; i++) {
 		for(int a = 0; a < N_ALPHA - 1; a++) {
@@ -145,8 +145,8 @@ void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol, void *meta) {
 		}
 	}
 
-	msgpack_pack_raw(pk, 6);
-	msgpack_pack_raw_body(pk, "x_pair", 6);
+	msgpack_pack_str(pk, 6);
+	msgpack_pack_str_body(pk, "x_pair", 6);
 
 	int nedge = ncol * (ncol - 1) / 2;
 	msgpack_pack_map(pk, nedge);
@@ -157,21 +157,21 @@ void write_raw_msgpack(FILE *out, conjugrad_float_t *x, int ncol, void *meta) {
 
 			int nchar = snprintf(sbuf, 8192, "%d/%d", i, j);
 
-			msgpack_pack_raw(pk, nchar);
-			msgpack_pack_raw_body(pk, sbuf, nchar);
+			msgpack_pack_str(pk, nchar);
+			msgpack_pack_str_body(pk, sbuf, nchar);
 
 			msgpack_pack_map(pk, 3);
 			
-			msgpack_pack_raw(pk, 1);
-			msgpack_pack_raw_body(pk, "i", 1);
+			msgpack_pack_str(pk, 1);
+			msgpack_pack_str_body(pk, "i", 1);
 			msgpack_pack_int32(pk, i);
 
-			msgpack_pack_raw(pk, 1);
-			msgpack_pack_raw_body(pk, "j", 1);
+			msgpack_pack_str(pk, 1);
+			msgpack_pack_str_body(pk, "j", 1);
 			msgpack_pack_int32(pk, j);
 
-			msgpack_pack_raw(pk, 1);
-			msgpack_pack_raw_body(pk, "x", 1);
+			msgpack_pack_str(pk, 1);
+			msgpack_pack_str_body(pk, "x", 1);
 
 			msgpack_pack_array(pk, N_ALPHA * N_ALPHA);
 			for(int a = 0; a < N_ALPHA; a++) {
