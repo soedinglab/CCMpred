@@ -9,7 +9,7 @@ set(CCMPRED_VERSION ${CCMPRED_MAJOR_VERSION}.${CCMPRED_MINOR_VERSION}.${CCMPRED_
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_lib/")
 
-set(CMAKE_C_FLAGS "-std=c99 -march=native -O3 -fno-strict-aliasing -g")
+set(CMAKE_C_FLAGS "-std=c99 -O3 -fno-strict-aliasing -g")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_SOURCE_DIR}/lib/libconjugrad/include")
