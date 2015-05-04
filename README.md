@@ -1,4 +1,6 @@
 # CCMpred
+[![Build Status](https://drone.io/github.com/soedinglab/CCMpred/status.png)](https://drone.io/github.com/soedinglab/CCMpred/latest)
+
 Protein Residue-Residue **C**ontacts from **C**orrelated **M**utations **pred**icted quickly and accurately.
 
 CCMpred is a C implementation of a Markov Random Field pseudo-likelihood maximization for learning protein residue-residue contacts as made popular by Ekeberg et al. [1] and Balakrishnan and Kamisetty [2]. While predicting contacts with comparable accuracy to the referenced methods, however, CCMpred is written in C / CUDA C, performance-tuned and therefore much faster.
