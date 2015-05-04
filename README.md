@@ -1,5 +1,6 @@
 # CCMpred
 [![Build Status](https://drone.io/github.com/soedinglab/CCMpred/status.png)](https://drone.io/github.com/soedinglab/CCMpred/latest)
+[![Build Status](https://codeship.com/projects/c2512a40-d488-0132-75f3-623d5159f317/status?branch=master)](https://codeship.com/projects/c2512a40-d488-0132-75f3-623d5159f317/status?branch=master)
 
 Protein Residue-Residue **C**ontacts from **C**orrelated **M**utations **pred**icted quickly and accurately.
 
