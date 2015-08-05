@@ -667,7 +667,7 @@ int main(int argc, char **argv)
 		return 3;
 	}
 
-	conjugrad_float_t outmat[ncol * ncol];
+	conjugrad_float_t *outmat = conjugrad_malloc(ncol * ncol);
 
 	FILE *rawfile = NULL;
 	if(rawfilename != NULL) {
@@ -754,6 +754,7 @@ int main(int argc, char **argv)
 
 	destroy(ud);
 
+	conjugrad_free(outmat);
 	conjugrad_free(x);
 	conjugrad_free(ud->weights);
 	free(ud);
