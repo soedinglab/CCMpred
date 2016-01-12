@@ -1,6 +1,2 @@
 language: c
-script:
-	- cmake
-	- make
-	- bin/ccmpred examples/1atzA.aln examples/1atzA.mat
-	- [[ $(wc -l < examples/1atzA.mat) == 75 ]]
+script: test/test.sh
