@@ -1,5 +1,9 @@
 # CCMpred
+
+
 [![Build Status](https://drone.io/github.com/soedinglab/CCMpred/status.png)](https://drone.io/github.com/soedinglab/CCMpred/latest)
+
+[![Build Status](https://travis-ci.org/soedinglab/CCMpred.svg?branch=master)](https://travis-ci.org/soedinglab/CCMpred)
 
 [![Build Status](https://codeship.com/projects/c2512a40-d488-0132-75f3-623d5159f317/status?branch=master)](https://codeship.com/projects/77807)
 
@@ -41,8 +45,8 @@ For the padded version:
 We recommend compiling CCMpred on the machine that should run the computations so that it can be optimized for the appropriate CPU/GPU architecture.
 
 ### Downloading
-#### Release tarballs
-The [release tarballs](https://bitbucket.org/soedinglab/ccmpred/downloads) should contain all required source files. Simply download and extract
+#### Releases
+The [releases](https://github.com/soedinglab/CCMpred/releases) should contain all required source files. Simply download and extract, then proceed to [Compilation](#compilation)
 
 #### Cloning from GIT
 If you want to compile the most recent version, simply clone the git repository. Then, from the repository root, initialize the libconjugrad submodule:
