@@ -45,14 +45,9 @@ For the padded version:
 We recommend compiling CCMpred on the machine that should run the computations so that it can be optimized for the appropriate CPU/GPU architecture.
 
 ### Downloading
-#### Releases
-The [releases](https://github.com/soedinglab/CCMpred/releases) should contain all required source files. Simply download and extract, then proceed to [Compilation](#compilation)
+If you want to compile the most recent version, use the follwing to clone both CCMpred and its submodules:
 
-#### Cloning from GIT
-If you want to compile the most recent version, simply clone the git repository. Then, from the repository root, initialize the libconjugrad submodule:
-
-	git submodule init
-	git submodule update
+	git clone --recursive https://github.com/soedinglab/CCMpred.git
 
 ### Compilation
 With the sourcecode ready, simply run cmake with the default settings and libraries should be auto-detected:
