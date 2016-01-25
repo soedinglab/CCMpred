@@ -6,6 +6,9 @@ set(CCMPRED_PATCH_VERSION 1)
 
 set(CCMPRED_VERSION ${CCMPRED_MAJOR_VERSION}.${CCMPRED_MINOR_VERSION}.${CCMPRED_PATCH_VERSION})
 
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/lib/libconjugrad/CMakeLists.txt")
+	message(FATAL_ERROR "CCMpred is missing the libconjugrad submodule! Please make sure to clone CCMpred according to the instructions in the README at \n https://github.com/soedinglab/CCMpred/blob/master/README.md#downloading")
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_lib/")
 
