@@ -41,7 +41,7 @@ void calculate_weights(conjugrad_float_t *w, unsigned char *msa, uint64_t ncol, 
 	}
 
 	for(uint64_t i = 0; i < nrow; i++) {
-		w[i] = 1./(1 + w[i]);
+		w[i] = 1./(w[i] - 1);
 	}
 
 	conjugrad_float_t wsum = 0;
