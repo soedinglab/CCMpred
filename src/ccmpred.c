@@ -727,9 +727,11 @@ int main(int argc, char **argv)
 		json_object_set(meta_results, "rawfile", meta_file_from_path(rawfilename));
 	}
 
+#ifdef MSGPACK
 	if(msgpackfilename != NULL) {
 		json_object_set(meta_results, "msgpackfile", meta_file_from_path(msgpackfilename));
 	}
+#endif
 
 	fprintf(out, "#>META> %s", json_dumps(meta, JSON_COMPACT));
 	if(rawfile != NULL) {
