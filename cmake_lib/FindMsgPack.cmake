@@ -21,7 +21,7 @@ FIND_PATH(MSGPACK_INCLUDE_DIR msgpack.hpp
     /usr/local/include/msgpack
 )
 
-FIND_LIBRARY(MSGPACK_LIBRARY NAMES msgpack PATHS
+FIND_LIBRARY(MSGPACK_LIBRARY NAMES msgpack msgpackc PATHS
     /usr/lib
     /usr/local/lib
     /usr/local/lib/msgpack
