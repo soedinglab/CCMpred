@@ -59,7 +59,7 @@ endif(NOT DEFINED CONJUGRAD_FLOAT)
 add_definitions("-D_DEFAULT_SOURCE")
 add_definitions("-D_GNU_SOURCE")
 add_definitions("-DCONJUGRAD_FLOAT=${CONJUGRAD_FLOAT}")
-add_definitions("-D__VERSION=\"${CCMPRED_VERSION}\"")
+add_definitions('-D__VERSION="${CCMPRED_VERSION}"')
 add_definitions("-DBIG_ALIGN=0")
 
 set(SOURCES src/ccmpred.c src/sequence.c src/util.c src/io.c src/evaluate_cpu.c src/parseopt.c src/reweighting.c src/numdif.c src/meta.c)
@@ -166,7 +166,7 @@ target_link_libraries(ccmpred conjugrad)
 if(CUDA_FOUND)
 	set(CMAKE_SKIP_RPATH on) # no -rpath
 	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "") # no -rdynamic
-	set(CMAKE_C_LINK_EXECUTABLE "nvcc ${CUDA_NVCC_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> -rdc=true -Xcompiler -fopenmp")
+	set(CMAKE_C_LINK_EXECUTABLE "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc ${CUDA_NVCC_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> -rdc=true -Xcompiler -fopenmp")
 	set_target_properties(conjugrad PROPERTIES LINK_LIBRARIES "") # remove absolute path to libcudart.so
 endif(CUDA_FOUND)
 
