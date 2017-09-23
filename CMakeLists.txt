@@ -77,6 +77,7 @@ if(WITH_MSGPACK)
 endif(WITH_MSGPACK)
 if(MSGPACK_FOUND)
 	add_definitions("-DMSGPACK")
+	include_directories(${MSGPACK_INCLUDE_DIR})
 endif(MSGPACK_FOUND)
 
 # Compile with jansson if available
