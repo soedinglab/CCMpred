@@ -64,9 +64,11 @@ void read_raw(char *filename, userdata *ud, conjugrad_float_t *x) {
 	char *line = (char*) malloc(sizeof(char) * 8192);
 	char* expected = malloc(1024);
 	int ncol = ud->ncol;
+	int nsingle_padded = ud->nsingle + N_ALPHA_PAD - (ud->nsingle % N_ALPHA_PAD);
 
 	conjugrad_float_t *x1 = x;
-	conjugrad_float_t *x2 = x + ud->nsingle;
+	//conjugrad_float_t *x2 = x + ud->nsingle;
+	conjugrad_float_t *x2 = &x[nsingle_padded];
 
 	for(int i = 0; i < ncol; i++) {
 		fgets(line, 8192, f);
