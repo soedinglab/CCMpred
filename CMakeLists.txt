@@ -1,8 +1,10 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.8)
+include(CheckLanguage)
+
 project (CCMpred)
 set(CCMPRED_MAJOR_VERSION 0)
 set(CCMPRED_MINOR_VERSION 3)
-set(CCMPRED_PATCH_VERSION 2)
+set(CCMPRED_PATCH_VERSION 3)
 
 set(CCMPRED_VERSION ${CCMPRED_MAJOR_VERSION}.${CCMPRED_MINOR_VERSION}.${CCMPRED_PATCH_VERSION})
 
@@ -104,29 +106,30 @@ endif(WITH_OMP)
 if(OPENMP_FOUND)
 	list(APPEND SOURCES src/evaluate_cpu_omp.c)
 	add_definitions("-DOPENMP")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif(OPENMP_FOUND)
+
 
 # Compile with CUDA if we can find the SDK
 if(WITH_CUDA)
-	find_package(CUDA)
-endif(WITH_CUDA)
-if(CUDA_FOUND)
+	check_language(CUDA)
+	enable_language(CUDA)
+
 	add_definitions(-DCUDA)
 
-	if(NOT DEFINED GPU_ARCH)
-		set(GPU_ARCH "-arch=sm_20")
-	endif(NOT DEFINED GPU_ARCH)
+	include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-	set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -lineinfo ${GPU_ARCH}")
+	list(APPEND SOURCES src/evaluate_cuda.c src/evaluate_cuda_kernels.cu)
+endif(WITH_CUDA)
 
-	set(CUDA_SEPARATE_COMPILATION ON)
+add_executable(ccmpred ${SOURCES})
 
-	cuda_compile(KERNELS_O src/evaluate_cuda_kernels.cu)
-	list(APPEND SOURCES src/evaluate_cuda.c ${KERNELS_O})
-	include_directories(${CUDA_INCLUDE_DIRS})
-endif(CUDA_FOUND)
+if(OPENMP_FOUND)
+	target_link_libraries(ccmpred OpenMP::OpenMP_CXX)
+endif(OPENMP_FOUND)
+
+if(WITH_CUDA)
+	set_target_properties(ccmpred PROPERTIES CUDA_SEPERABLE_COMPILATION ON)
+endif(WITH_CUDA)
 
 # Compile with curses if available
 if(WITH_CURSES)
@@ -135,10 +138,6 @@ endif(WITH_CURSES)
 if(CURSES_HAVE_CURSES_H AND WITH_CURSES)
 	add_definitions(-DCURSES)
 endif(CURSES_HAVE_CURSES_H AND WITH_CURSES)
-
-
-
-add_executable(ccmpred ${SOURCES})
 
 if(CURSES_HAVE_CURSES_H)
 	target_link_libraries(ccmpred ${CURSES_LIBRARIES})
@@ -159,17 +158,14 @@ if(UNIX)
 endif(UNIX)
 
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(ccmpred Threads::Threads)
+
 # compile libConjuGrad
 add_subdirectory(lib/libconjugrad)
 target_link_libraries(ccmpred conjugrad)
 
-
-if(CUDA_FOUND)
-	set(CMAKE_SKIP_RPATH on) # no -rpath
-	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "") # no -rdynamic
-	set(CMAKE_C_LINK_EXECUTABLE "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc ${CUDA_NVCC_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> -rdc=true -Xcompiler -fopenmp")
-	set_target_properties(conjugrad PROPERTIES LINK_LIBRARIES "") # remove absolute path to libcudart.so
-endif(CUDA_FOUND)
 
 install(TARGETS ccmpred DESTINATION bin)
 
