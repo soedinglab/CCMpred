@@ -11,7 +11,7 @@ import Bio.SeqIO
 
 def convert(f_in, format, f_out):
     for record in Bio.SeqIO.parse(f_in, format):
-        f_out.write(record.seq.tostring())
+        f_out.write(str(record.seq))
         f_out.write("\n")
 
 
