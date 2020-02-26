@@ -31,11 +31,11 @@ When doing computations on the GPU, the available memory limits the size of the 
 
 You can calculate the memory requirements in bytes for L columns and N rows using the following formula:
 
-	4*(4*(L*L*21*21 + L*20) + 23*N*L + N + L*L) + 2*N*L + 1024
+	4*(4*(L*L*21*21 + L*20) + 23*N*L + N) + 2*N*L
 
 For the padded version:
 
-	4*(4*(L*L*32*21 + L*20) + 23*N*L + N + L*L) + 2*N*L + 1024
+	4*(4*(L*L*32*21 + L*20) + 34*N*L + N) + 2*N*L
 
 ## Installation
 We recommend compiling CCMpred on the machine that should run the computations so that it can be optimized for the appropriate CPU/GPU architecture.
