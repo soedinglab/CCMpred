@@ -198,6 +198,7 @@ void usage(char* exename, int long_usage) {
 		printf("\n");
 		printf("\t-i INIFILE\tRead initial weights from INIFILE\n");
 		printf("\t-r RAWFILE\tStore raw prediction matrix in RAWFILE\n");
+		printf("\t-y NUMPYFILE\tStore raw prediction matrix in binary numpy array NUMPYFILE\n");
 
 #ifdef MSGPACK
 		printf("\t-b BRAWFLE\tStore raw prediction matrix in msgpack format in BRAWFLE\n");
@@ -219,6 +220,7 @@ void usage(char* exename, int long_usage) {
 int main(int argc, char **argv)
 {
 	char *rawfilename = NULL;
+	char *numpyfilename = NULL;
 	int numiter = 250;
 	int use_apc = 1;
 	int use_normalization = 0;
@@ -233,7 +235,7 @@ int main(int argc, char **argv)
 	char *optstr;
 	char *old_optstr = malloc(1);
 	old_optstr[0] = 0;
-	optstr = concat("r:i:n:w:k:e:l:ARh?", old_optstr);
+	optstr = concat("y:r:i:n:w:k:e:l:ARh?", old_optstr);
 	free(old_optstr);
 
 #ifdef OPENMP
@@ -293,6 +295,9 @@ int main(int argc, char **argv)
 			case 'r':
 				rawfilename = thisOpt->argument;
 				break;
+		    case 'y':
+		        numpyfilename = thisOpt->argument;
+		        break;
 			case 'i':
 				initfilename = thisOpt->argument;
 				break;
@@ -683,6 +688,19 @@ int main(int argc, char **argv)
 		write_raw(rawfile, x, ncol);
 	}
 
+	FILE *numpyfile = NULL;
+	if (numpyfilename != NULL) {
+	    printf("Writing numpy array %s\n", numpyfilename);
+	    numpyfile = fopen(numpyfilename, "w");
+
+	    if (numpyfile == NULL) {
+	        printf("Cannot open %s for writing!\n\n", numpyfilename);
+	        return 5;
+	    }
+
+	    write_raw_numpy(numpyfile, x, ncol);
+	}
+
 #ifdef MSGPACK
 
 	FILE *msgpackfile = NULL;
@@ -727,6 +745,10 @@ int main(int argc, char **argv)
 		json_object_set(meta_results, "rawfile", meta_file_from_path(rawfilename));
 	}
 
+    if(numpyfilename != NULL) {
+        json_object_set(meta_results, "numpyfile", meta_file_from_path(numpyfilename));
+    }
+
 #ifdef MSGPACK
 	if(msgpackfilename != NULL) {
 		json_object_set(meta_results, "msgpackfile", meta_file_from_path(msgpackfilename));
@@ -743,6 +765,10 @@ int main(int argc, char **argv)
 	if(rawfile != NULL) {
 		fclose(rawfile);
 	}
+
+    if(numpyfile != NULL) {
+        fclose(numpyfile);
+    }
 
 #ifdef MSGPACK
 	if(msgpackfile != NULL) {

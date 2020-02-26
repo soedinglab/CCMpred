@@ -21,6 +21,15 @@ void write_matrix(FILE *out, conjugrad_float_t *mat, int ncol, int nrow);
 void write_raw(FILE *out, conjugrad_float_t *x, int ncol);
 
 /**
+ * Write out raw MRF data to a file descriptor as a numpy array
+ *
+ * @param[in] out The file handle to write to
+ * @param[in] x The parameters of the MRF to write out
+ * @param[in] ncol The number of columns in the underlying MSA
+ */
+void write_raw_numpy(FILE *out, conjugrad_float_t *x, int ncol);
+
+/**
  * Read initial weights from a file.
  *
  * @param[in] filename The file name to read from
