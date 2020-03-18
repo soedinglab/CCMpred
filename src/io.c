@@ -86,7 +86,7 @@ void write_raw_numpy(FILE *out, conjugrad_float_t *x, int ncol) {
 
     // Determine padded header size
     char header[200];
-    int dict_len = snprintf(header, 200, "{'descr': '<f4', 'fortran_order': False, 'shape': (441, %d, %d), }", ncol, ncol);
+    int dict_len = snprintf(header, 200, "{'descr': '<f4', 'fortran_order': False, 'shape': (%d, %d, 441), }", ncol, ncol);
     int temp_len = 6 + 2 + 2 + dict_len + 1; // magic + version + header_length + dict + 0x0A;
     short padding = 0;
     short r = temp_len % 64;
@@ -104,10 +104,10 @@ void write_raw_numpy(FILE *out, conjugrad_float_t *x, int ncol) {
     fwrite(&terminator, 1, 1, out);
 
     // Write parameters in C-contiguous order
-    for(int a = 0; a < N_ALPHA; a++) {
-        for(int b = 0; b < N_ALPHA; b++) {
-            for(int i = 0; i < ncol; i++) {
-                for(int j = 0; j < ncol; j++) {
+    for(int i = 0; i < ncol; i++) {
+        for(int j = 0; j < ncol; j++) {
+            for(int a = 0; a < N_ALPHA; a++) {
+                for(int b = 0; b < N_ALPHA; b++) {
                     fwrite(&W(b,j,a,i), 4, 1, out);
                 }
             }
