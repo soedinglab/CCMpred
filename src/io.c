@@ -59,6 +59,62 @@ void write_raw(FILE *out, conjugrad_float_t *x, int ncol) {
 	}
 }
 
+void write_raw_numpy(FILE *out, conjugrad_float_t *x, int ncol) {
+
+    int nsingle = ncol * (N_ALPHA - 1);
+    int nsingle_padded = nsingle + N_ALPHA_PAD - (nsingle % N_ALPHA_PAD);
+
+    conjugrad_float_t *x1 = x;
+    //conjugrad_float_t *x2 = &x[nsingle];
+    conjugrad_float_t *x2 = &x[nsingle_padded];
+    (void)x2;
+
+    // Write magic code
+    char magic[6] = {'\x93', '\x4E', '\x55', '\x4D', '\x50', '\x59'};
+    fwrite(magic, 1, 6, out);
+
+    // Write version information
+    char version[2] = {0x01, 0x00};
+    fwrite(version, 1, 2, out);
+
+    int digits = 0;
+    int num = ncol;
+    while (num != 0) {
+        digits++;
+        num /= 10;
+    }
+
+    // Determine padded header size
+    char header[200];
+    int dict_len = snprintf(header, 200, "{'descr': '<f4', 'fortran_order': False, 'shape': (%d, %d, 441), }", ncol, ncol);
+    int temp_len = 6 + 2 + 2 + dict_len + 1; // magic + version + header_length + dict + 0x0A;
+    short padding = 0;
+    short r = temp_len % 64;
+    if (r != 0)
+        padding = 64 - r;
+    short header_length = dict_len + padding + 1;
+
+    // Write header length, the header itself, padding and terminating character
+    fwrite(&header_length, 2, 1, out);
+    fwrite(header, 1, dict_len, out);
+    char pad = '\x20';
+    for (int i=0 ; i<padding ; ++i)
+        fwrite(&pad, 1, 1, out);
+    char terminator = '\x0A';
+    fwrite(&terminator, 1, 1, out);
+
+    // Write parameters in C-contiguous order
+    for(int i = 0; i < ncol; i++) {
+        for(int j = 0; j < ncol; j++) {
+            for(int a = 0; a < N_ALPHA; a++) {
+                for(int b = 0; b < N_ALPHA; b++) {
+                    fwrite(&W(b,j,a,i), 4, 1, out);
+                }
+            }
+        }
+    }
+}
+
 void read_raw(char *filename, userdata *ud, conjugrad_float_t *x) {
 	FILE *f = fopen(filename, "r");
 	char *line = (char*) malloc(sizeof(char) * 8192);

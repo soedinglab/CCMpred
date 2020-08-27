@@ -6,7 +6,7 @@
 #include "evaluate_cuda.h"
 #include "ccmpred.h"
 
-#define CHECK_ERR(err) {if (cudaSuccess != (err)) { printf("CUDA error No. %d in %s at line %d\n", (err), __FILE__, __LINE__); exit(EXIT_FAILURE); } }
+#define CHECK_ERR(err) {int e = (err); if (cudaSuccess != e) { printf("CUDA error No. %d in %s at line %d\n", e, __FILE__, __LINE__); exit(EXIT_FAILURE); } }
 
 #ifdef __cplusplus
 extern "C" {
