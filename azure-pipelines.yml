@@ -22,7 +22,7 @@ jobs:
         displayName: build ccmpred
       - script: |
           tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
-          [[ $(wc -l < 1atzA.mat) == 75 ]]
+          test $(wc -l < 1atzA.mat) = 75
         displayName: run example
   
   - job: ubuntu_18_04
@@ -42,7 +42,7 @@ jobs:
         displayName: build ccmpred
       - script: |
           tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
-          [[ $(wc -l < 1atzA.mat) == 75 ]]
+          test $(wc -l < 1atzA.mat) = 75
         displayName: run example
   
   - job: ubuntu_20_04
@@ -62,7 +62,7 @@ jobs:
         displayName: build ccmpred
       - script: |
           tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
-          [[ $(wc -l < 1atzA.mat) == 75 ]]
+          test $(wc -l < 1atzA.mat) = 75
         displayName: run example
 
   - job: macos_10_14
@@ -82,7 +82,7 @@ jobs:
         displayName: build ccmpred
       - script: |
           tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
-          [[ $(wc -l < 1atzA.mat) == 75 ]]
+          test $(wc -l < 1atzA.mat) = 75
         displayName: run example
   
   - job: macos_10_15
@@ -102,5 +102,5 @@ jobs:
         displayName: build ccmpred
       - script: |
           tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
-          [[ $(wc -l < 1atzA.mat) == 75 ]]
+          test $(wc -l < 1atzA.mat) = 75
         displayName: run example
