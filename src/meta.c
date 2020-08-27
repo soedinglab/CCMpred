@@ -1,5 +1,6 @@
 #include <time.h>
 #include <stdlib.h>
+#include <libgen.h>
 
 #ifdef UUID
 #include <uuid/uuid.h>
