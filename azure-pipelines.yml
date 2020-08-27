@@ -1,0 +1,106 @@
+trigger:
+  - master
+pr:
+  - master
+
+
+jobs:
+  - job: ubuntu_16_04
+    pool:
+      vmImage: 'Ubuntu-16.04'
+    steps:
+      - checkout: self
+        submodules: "true"
+      - script: |
+          sudo apt-get update
+          sudo apt-get install libjansson-dev
+        displayName: install dependencies
+      - script: |
+          mkdir -p tmp_build && cd tmp_build
+          cmake .. -DWITH_CUDA=off
+          make
+        displayName: build ccmpred
+      - script: |
+          tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
+          test $(wc -l < 1atzA.mat) = 75
+        displayName: run example
+  
+  - job: ubuntu_18_04
+    pool:
+      vmImage: 'Ubuntu-18.04'
+    steps:
+      - checkout: self
+        submodules: "true" 
+      - script: |
+          sudo apt-get update
+          sudo apt-get install libjansson-dev libmsgpack-dev
+        displayName: install dependencies
+      - script: |
+          mkdir -p tmp_build && cd tmp_build
+          cmake .. -DWITH_CUDA=off
+          make
+        displayName: build ccmpred
+      - script: |
+          tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
+          test $(wc -l < 1atzA.mat) = 75
+        displayName: run example
+  
+  - job: ubuntu_20_04
+    pool:
+      vmImage: 'Ubuntu-20.04'
+    steps:
+      - checkout: self
+        submodules: "true" 
+      - script: |
+          sudo apt-get update
+          sudo apt-get install libjansson-dev libmsgpack-dev
+        displayName: install dependencies
+      - script: |
+          mkdir -p tmp_build && cd tmp_build
+          cmake .. -DWITH_CUDA=off
+          make
+        displayName: build ccmpred
+      - script: |
+          tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
+          test $(wc -l < 1atzA.mat) = 75
+        displayName: run example
+
+  - job: macos_10_14
+    pool:
+      vmImage: 'macOS-10.14'
+    steps:
+      - checkout: self
+        submodules: "true" 
+      - script: |
+          brew update
+          brew install msgpack jansson
+        displayName: install dependencies
+      - script: |
+          mkdir -p tmp_build && cd tmp_build
+          cmake .. -DWITH_CUDA=off
+          make
+        displayName: build ccmpred
+      - script: |
+          tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
+          test $(wc -l < 1atzA.mat) = 75
+        displayName: run example
+  
+  - job: macos_10_15
+    pool:
+      vmImage: 'macOS-10.15'
+    steps:
+      - checkout: self
+        submodules: "true" 
+      - script: |
+          brew update
+          brew install msgpack jansson
+        displayName: install dependencies
+      - script: |
+          mkdir -p tmp_build && cd tmp_build
+          cmake .. -DWITH_CUDA=off
+          make
+        displayName: build ccmpred
+      - script: |
+          tmp_build/bin/ccmpred example/1atzA.aln 1atzA.mat
+          test $(wc -l < 1atzA.mat) = 75
+        displayName: run example
