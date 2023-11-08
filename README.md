@@ -41,9 +41,9 @@ For the padded version:
 We recommend compiling CCMpred on the machine that should run the computations so that it can be optimized for the appropriate CPU/GPU architecture.
 
 ### Downloading
-If you want to compile the most recent version, use the follwing to clone both CCMpred and its submodules:
+If you want to compile the most recent version, use the following to clone the latest version of CCMpred:
 
-	git clone --recursive https://github.com/soedinglab/CCMpred.git
+	git clone https://github.com/soedinglab/CCMpred.git
 
 ### Compilation
 With the sourcecode ready, simply run cmake with the default settings and libraries should be auto-detected:

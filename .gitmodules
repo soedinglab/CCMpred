@@ -1,3 +1,0 @@
-[submodule "lib/libconjugrad"]
-	path = lib/libconjugrad
-	url = https://bitbucket.org/soedinglab/libconjugrad.git
